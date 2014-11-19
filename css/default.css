@@ -1,40 +1,48 @@
 body {
-    color: black;
-    font-size: 16px;
+    color: #333;
+    font-family: "Open Sans", sans-serif;
+    font-size: 18px;
+    text-align: center;
     margin: 0px auto 0px auto;
     width: 600px;
+    background-color: #fdf6e3;
+}
+
+body a {
+    text-decoration: none;
+    color: #859900;
 }
 
 div#header {
-    border-bottom: 2px solid black;
-    margin-bottom: 30px;
-    padding: 12px 0px 12px 0px;
+    padding: 12px 0;
 }
 
 div#logo a {
-    color: black;
-    float: left;
-    font-size: 18px;
-    font-weight: bold;
+    color: #268bd2;
+    font-family: "Quattrocento", serif;
+    font-size: 64px;
     text-decoration: none;
-}
-
-div#header #navigation {
-    text-align: right;
+    margin-bottom:12px;
+    display: block;
 }
 
 div#header #navigation a {
-    color: black;
-    font-size: 18px;
+    color: #586e75;
+    font-family: "Quattrocento", serif;
+    font-size: 24px;
     font-weight: bold;
-    margin-left: 12px;
+    margin-right: 12px;
     text-decoration: none;
-    text-transform: uppercase;
+    text-transform: lowercase;
+}
+
+div#header #navigation a#current {
+    color: #268bd2;
 }
 
 div#footer {
-    border-top: solid 2px black;
-    color: #555;
+    border-top: solid 2px #657b83;
+    color: #657b83;
     font-size: 12px;
     margin-top: 30px;
     padding: 12px 0px 12px 0px;
@@ -42,7 +50,11 @@ div#footer {
 }
 
 h1 {
+    font-family: "Quattrocento", serif;
     font-size: 24px;
+    color: #268bd2;
+    margin: 18px 0 0;
+    text-transform: lowercase;
 }
 
 h2 {
@@ -50,7 +62,11 @@ h2 {
 }
 
 div.info {
-    color: #555;
+    color: #777;
     font-size: 14px;
-    font-style: italic;
+    text-transform: lowercase;    
+}
+
+ul {
+    list-style-type: none;
 }

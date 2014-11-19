@@ -1,6 +1,7 @@
 ---
 title: Contact
+contact: true
+notitle: true
 ---
 
-I live in a small hut in the mountains of Kumano Kodō on Kii Hantō and would not
-like to be contacted.
+My username at gmail is the same as my one at github.
