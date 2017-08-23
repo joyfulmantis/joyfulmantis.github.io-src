@@ -1,0 +1,376 @@
+---
+title: "Functors, Applicatives, and Monads: You don't need to know theory to use them"
+date: 2017-08-23
+hackernews_url:
+---
+
+Figuring out how to use the common functional programming typeclassess is not as hard as you would think. The key here is not to start with understanding the category theory behind them, but rather first start with using their implementations in the standard datatypes. Eventually by using them throughout different datatypes you will be able to grasp the larger picture, without having to touch the slightest bit of category theory.
+
+What datatypes that implement any of Functors, Applicatives or Monads have in common is that they all have some data, usually polymorphic (aka it really could be *any* type of data) locked inside, and that data can't be naively accessed. Functors, Applicatives, and Monads each define certain specific ways that that data can be accessed. Throughout this article I will use standard datatypes that are easy to reason about, and show how their implementations of the aforementioned three typeclasses pan out.
+
+One easy to reason about datatype in Haskell is the datatype src_haskell{Maybe a}, in this case specified to be src_haskell{Maybe String}. This datatype can either be constructed as src_haskell{Just String}, which is simply a wrapper around a string or src_haskell{Nothing}, which doesn't hold any value at all. With this in mind you can see that if we receive a src_haskell{Maybe String} with no guarantees on whether or not it actually contains a string or not, there is no simple way to access the enclosed string. For example suppose there was a function 
+
+#+BEGIN_SRC haskell
+getInnerString :: Maybe String -> String
+getInnerString (Just string) = string
+getInnerString (Nothing) = error "system blowing up, activating emergency protocols..."
+#+END_SRC
+
+and we gave it a src_haskell{Nothing}. In that case it would only have the option of crashing the program (with an error), and that is something we do not want to do.
+
+The most basic typeclass available to us is the Functor, and it provides us with the ability to apply a function to the value inside the datatype that implements the Functor without worrying about whether or not it is possible to unwrap it. The important function that is required to implement the Functor typeclass is 
+
+#+BEGIN_SRC haskell
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+#+END_SRC
+
+This may seem confusing, especially since haskellers like to use these sorts of symbol functions between the two arguments that they are applying to it, but specifying it to src_haskell{Maybe String} and renaming it to something pronounceable already helps to remove almost all of the confusion
+
+#+BEGIN_SRC haskell
+map :: (String -> b) -> Maybe String -> Maybe b
+#+END_SRC
+
+Here instead of unwrapping Maybe and then applying a function to the unwrapped value, we instead provide Maybe with the function that we want to apply, and let it take care of the rest. One result of having Maybe apply the value is that the resulting value has never gotten unwrapped, and therefore we need not worry about wrapping it up again.
+
+Here are some examples of how this plays out
+#+BEGIN_SRC haskell
+mapF = (<$>)
+
+smellsBadF :: String -> String
+smellsBadF who = who ++ " smells awful"
+
+maybeJamesF :: Maybe String
+maybeJamesF = Just "James"
+
+maybeJohnF :: Maybe String
+maybeJohnF = Nothing
+
+maybeStinkyJamesF :: Maybe String
+maybeStinkyJamesF = mapF smellsBadF maybeJamesF
+-- > maybeStinkyJamesF 
+--   Just "James smells awful"
+
+maybeStinkyJohnF :: Maybe String
+maybeStinkyJohnF = mapF smellsBadF maybeJohnF
+-- > maybeStinkyJohnF
+--   Nothing
+#+END_SRC
+
+You may have used this even if you have never seen a 'functional language' before. It is exactly the same as the map function several languages use over a linked list. If you think of it, it makes sense that linked lists also implements the Functor typeclass. After all it is also a container that includes data, but whose data is also not easily accessible. For example, even if we assume the head of the list is all the so contained data, we can't even be sure that the list we are getting has a head, or instead is an empty list
+
+#+BEGIN_SRC haskell
+mapF = (<$>)
+
+smellsBadF :: String -> String
+smellsBadF who = who ++ " smells awful"
+
+peopleF :: [String]
+peopleF = ["Fred", "Sandra", "Bill"]
+
+ghostsF :: [String]
+ghostsF = []
+
+stinkyPeopleF :: [String]
+stinkyPeopleF = mapF smellsBadF peopleF
+-- > stinkyPeopleF
+--   ["Fred smells awful", "Sandra smells awful", "Bill smells awful"]
+
+stinkyGhostsF :: [String]
+stinkyGhostsF = mapF smellsBadF ghostsF
+-- > stinkyGhostsF
+--   []
+#+END_SRC
+
+Above using the Functor typeclass, we have discovered that even though it has a scary name, it's bark is certainly bigger than it's bite. We shall find below that learning the Functor typeclass was not a singular exception, but rather a general rule.
+
+The next typeclass we shall tackle is the Applicative typeclass. Again any datatypes that implement the Applicative typeclass usually contains enclosed data that is hard to easily access. Another thing to keep in mind, is that any datatype that implements the Applicative typeclass also implements the Functor typeclass. The two functions that are required to implement the Applicative typeclass are
+
+#+BEGIN_SRC haskell
+pure :: Applicative f => a -> f a
+
+--and
+
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+#+END_SRC
+
+Again this looks more complicated then it really is, but that's just because it is using symbols and is generic across all datatypes that implement the Applicative typeclass. If we specify to src_haskell{Maybe String} and change the function names, it quickly becomes much easier to reason about.
+
+#+BEGIN_SRC haskell
+wrap :: a -> Mabye a
+
+apply :: Maybe (String -> b) -> Maybe String -> Maybe b
+#+END_SRC
+
+For the wrap function there is really almost nothing to it. It takes a value and encloses it in the datatype that implements the Applicative typeclass. For example looking back at our maybeJames function from above we can change it just so
+
+#+BEGIN_SRC haskell
+wrapA = pure
+
+-- the orginal function
+maybeJamesF :: Maybe String
+maybeJamesF = Just "James"
+-- > maybeJamesF
+--   Just "James"
+
+-- and now using the Applicative typeclass
+maybeJamesA :: Maybe String
+maybeJamesA = wrapA "James"
+-- > maybeJamesF
+--   Just "James"
+-- > maybeJamesA == maybeJamesF
+--   True
+#+END_SRC
+
+The apply function is equally easy to wrap your mind around. It is also much more powerful than the mapping function from before, because whereas the map function can only apply a function to operate on the datatype's inner value, the apply function (paired with the wrap function) can not only be used the same way, but can also be used to compose multiple wrapped values together. To see this in action we will first take the example that we worked on with the Functor typeclass and use functions from the Applicative typeclass instead.
+
+#+BEGIN_SRC haskell
+wrapA = pure
+applyA = (<*>)
+
+smellsBadA :: String -> String
+smellsBadA who = who ++ " smells awful"
+
+maybeSmellsBadA :: Maybe (String -> String)
+maybeSmellsBadA = wrapA smellsBadA
+
+maybeJamesA :: Maybe String
+maybeJamesA = wrapA "James"
+
+maybeJohnA :: Maybe String
+maybeJohnA = Nothing
+
+maybeStinkyJamesA :: Maybe String
+maybeStinkyJamesA = applyA maybeSmellsBadA maybeJamesA
+-- > maybeStinkyJamesA
+--   Just "James smells awful"
+
+maybeStinkyJohnA :: Maybe String
+maybeStinkyJohnA = applyA maybeSmellsBadA maybeJohnA
+-- > maybeStinkyJohnA
+--   Nothing
+#+END_SRC
+
+And then we will spice it up a little by still using some of the function from above, but now also using the apply function to compose two Maybe values.
+
+#+BEGIN_SRC haskell
+wrapA = pure
+applyA = (<*>)
+
+smellsBadA :: String -> String
+smellsBadA who = who ++ " smells awful"
+
+maybeFredA :: Maybe String
+maybeFredA = wrapA "Fred"
+
+maybeJamesA :: Maybe String
+maybeJamesA = wrapA "James"
+
+maybeJohnA :: Maybe String
+maybeJohnA = Nothing
+
+bothSmellBadA :: String -> String -> String
+bothSmellBadA who1 who2 = 
+  (smellsBadA who1) ++ ", but " ++ (smellsBadA who2) ++ " too!"
+
+maybeBothSmellBadA :: Maybe (String -> String -> String)
+maybeBothSmellBadA = wrapA bothSmellBadA
+
+maybeJamesFredBothSmellA :: Maybe String
+maybeJamesFredBothSmellA = applyA (applyA maybeBothSmellBadA maybeJamesA) maybeFredA
+-- > maybeJamesFredBothSmellA
+--   Just "James smells awful, but Fred smells awful too!"
+
+maybeJamesJohnBothSmellA :: Maybe String
+maybeJamesJohnBothSmellA = applyA (applyA maybeBothSmellBadA maybeJamesA) maybeJohnA
+-- > maybeJamesJohnBothSmellA
+--   Nothing
+#+END_SRC
+
+How come we can apply only one wrapped function to two different wrapped values? The key here is that Haskell uses currying, so a function that takes two arguments, is in fact the same as a function that takes one argument and returns as a a value another function that also takes a value and then that finally returns the actual result. To see it in types
+
+#+BEGIN_SRC haskell
+maybeBothSmellBadA :: Maybe (String -> (String -> String))
+-- this is the same as Maybe (String -> String -> String) but the parens are
+-- added to increase understanding
+
+applyA1st :: Maybe (String -> (String -> String)) -> Maybe String -> Maybe (String -> String)
+applyA1st = applyA
+
+maybeJamesFredBothSmellA1st :: Maybe (String -> String)
+maybeJamesFredBothSmellA1st = apply1st maybeBothSmellBadA maybeJamesA
+
+applyA2cnd :: Maybe (String -> String) -> Maybe String -> Maybe String
+applyA2cnd = applyA
+
+maybeJamesFredBothSmellA2cnd :: Maybe String
+maybeJamesFredBothSmellA2cnd = apply2cnd maybeJamesFredBothSmell1st maybeFredA
+#+END_SRC
+
+Another way to see the power of Applicative's apply function is to use src_haskell{Control.Monad.Writer}. It is a datatype that allows us to have a value that comes with an accompanying log. When the writer's are composed, the logs are composed (by appending) for free too.
+
+#+BEGIN_SRC haskell
+import Control.Monad.Writer
+
+applyA = (<*>)
+wrapA = pure
+
+jamesWriterA :: Writer [String] String
+jamesWriterA = writer ("James", ["Creating Person: James"])
+
+fredWriterA :: Writer [String] String
+fredWriterA = writer ("Fred", ["Creating Person: Fred"])
+
+theyHateA :: String -> String -> String
+theyHateA person1 person2 = person1 ++ " hates " ++ person2
+
+theyHateWriterA :: Writer [String] (String -> String -> String)
+theyHateWriterA = wrapA theyHateA
+
+jamesHatesFredWriterA :: Writer [String] String
+jamesHatesFredWriterA = applyA (applyA theyHateWriterA jamesWriterA) fredWriterA
+-- > runWriter jamesHatesFredWriterA
+--   ("James hates Fred",["Creating Person: James","Creating Person: Fred"])
+#+END_SRC
+
+And that's already most of it. The final typeclass we want to talk about is the "dreaded" Monad. But just as the Applicative and Functor typeclasses are not that hard, the Monad typeclass is not substantively harder to understand than they were either. Just like all datatypes that implement the Applicative typeclass also implement the Functor typeclass, so all datatypes that implement the Monad typeclass also implement the Applicative typeclass (and therefore the Functor typeclass too).
+
+There is only one[fn:1] new function that needs to be declared to implement the Monad typeclass.
+
+#+BEGIN_SRC haskell
+(=<<) :: Monad m => (a -> m b) -> m a -> m b
+#+END_SRC
+
+Again, scarier than it actually is, since it's all symbols, and is generic for any Monad. Desymbolizing it, specifying it for src_haskell{Maybe String} and giving it a pronounceable name gives us
+
+#+BEGIN_SRC haskell
+bind :: (String -> Maybe b) -> Mabye String -> Maybe b
+#+END_SRC
+
+Re-implementing what we just did with Functor and then Applicative in Monad is not too hard to manage. 
+
+#+BEGIN_SRC haskell
+wrapM = return 
+-- pure in the Applicative typeclass is called return, groovy right?
+bindM = (=<<)
+
+smellsBadM :: String -> String
+smellsBadM who = who ++ " smells awful"
+
+--instead of wrapping the whole function like with the applicative version we 
+--path the argument through and then wrap the result
+maybeSmellsBadM :: String -> Maybe String
+maybeSmellsBadM who = wrapM (smellsBadM who)
+
+maybeJamesM :: Maybe String
+maybeJamesM = wrapM "James"
+
+maybeJohnM :: Maybe String
+maybeJohnM = Nothing
+
+maybeStinkyJamesM :: Maybe String
+maybeStinkyJamesM = bindM maybeSmellsBadM maybeJamesM
+-- > maybeStinkyJamesM
+--   Just "James smells awful"
+
+maybeStinkyJohnM :: Maybe String
+maybeStinkyJohnM = bindM maybeSmellsBadM maybeJohnM
+-- > maybeStinkyJohnM
+--   Nothing
+#+END_SRC
+
+With a little bit of work we can get our composing values example from earlier working with the functions available from the Monad typeclass too
+
+#+BEGIN_SRC haskell
+bindM = (=<<)
+wrapM = return
+
+smellsBadM :: String -> String
+smellsBadM who = who ++ " smells awful"
+
+maybeJamesM :: Maybe String
+maybeJamesM = wrapM "James"
+
+maybeFredM :: Maybe String
+maybeFredM = wrapM "Fred"
+
+maybeJohnM :: Maybe String
+maybeJohnM = Nothing
+
+maybeBothSmellBadM :: String -> String -> Maybe String
+maybeBothSmellBadM who1 who2 = 
+  wrapM ((smellsBadM who1) ++ ", but " ++ (smellsBadM who2) ++ " too!")
+
+maybeBothSmellBadM2 :: Maybe String -> String -> Maybe String
+maybeBothSmellBadM2 who2 who1 = bindM (maybeBothSmellBadM who1) who2
+
+maybeJamesFredBothSmellM :: Maybe String
+maybeJamesFredBothSmellM = bindM (maybeBothSmellBadM2 maybeJamesM) maybeFredM
+-- > maybeJamesFredBothSmellM
+--   Just "Fred smells awful, but James smells awful too!"
+
+maybeJamesJohnBothSmellM :: Maybe String
+maybeJamesJohnBothSmellM = bindM (maybeBothSmellBadM2 maybeJamesM) maybeJohnM
+-- > maybeJamesJohnBothSmellM
+--   Nothing
+#+END_SRC
+
+Notice that in this example the ordering is opposite from what we found from using Applicative's apply. With apply we have two Maybe values, one of which is a function, and compose them together going left to right. With Monad's bind, this is no longer the case, but rather we have a function that takes the unwrapped value from the second Maybe value and returns another Maybe value from it, therefore making the order right to left.
+
+With the move from the Functor typeclass to the Applicative typeclass we moved from being able to modify the value wrapped inside the Functor to the ability to compose different separately wrapped elements in a Applicative together, so when we make the jump from Applicative to Monad, what new ability do we get? From comparing the types between bind and apply we can see that for the first time we no longer have our functions resulting value prewrapped for us. This comes in useful if the function we want to apply to the unwrapped value, itself already produces a wrapped value. If we had that scenario with only an Applicative we would have no way to avoid nesting. In fact one cool benefit of Monad's bind is that if we are given an already nested structure (for example if apply was used when bind should have been used), we can flatten it by just using the bind and identity functions.
+
+#+BEGIN_SRC haskell
+bindM = (=<<)
+wrapM = return
+
+identityM :: Maybe String -> Maybe String
+identityM value = value
+
+maybeJamesM :: Maybe String
+maybeJamesM = wrapM "James"
+
+nestedMaybeJamesM :: Maybe (Maybe String)
+nestedMaybeJamesM = wrapM maybeJamesM
+
+unNestedMaybeJamesM :: Maybe String
+unNestedMaybeJamesM = bindM identityM nestedMaybeJamesM
+-- > unNestedMaybeJamesM
+--   Just "James"
+-- > unNestedMaybeJamesM == maybeJamesM
+--   True
+#+END_SRC
+
+A practical use of this again shows up when using linked lists, bind even appears for this purpose in some other languages under the guise of flatMap, a function identical to bind specified to Lists. For example suppose I wanted to map a function over a list of values, but instead of just returning one value for each, I want to return several. One option to take care of this problem is to return a lists of lists, but this quickly becomes cumbersome when going several levels deep. Instead I can use Monad's bind to accumulate all the results in one (non-nested) list. Here we use bind to generate [[https://en.wikipedia.org/wiki/Backronym][backronyms]]
+
+#+BEGIN_SRC haskell
+import Data.List
+import Data.Char
+
+bindM = (=<<)
+
+-- Using a List for convenience for my (very short) word dictonary 
+wordDictonaryM :: [String]
+wordDictonaryM = ["Resistance", "External", "Frog-legs", "Combined", "Load-", 
+                 "Understated", "Bearing", "Operational", "Treadmill"]
+
+-- String is just a List of Char [Char]
+backronymM :: String
+-- Stephen 
+backronymM = "Colbert"
+
+findWordM :: Char -> String
+-- Don't let the anonymous function scare you. They are functions that don't have
+-- any name -- which makes them useful when they are short, and you only need to 
+-- use them once. In this case this anonymous function only has one argument "x"
+findWordM c = case find (\x -> head x == toUpper c) wordDictonaryM of
+               Just x -> x ++ " "
+               Nothing -> c : " "
+
+aTreadmillM :: String
+aTreadmillM = bindM findWordM backronymM
+-- > aTreadmillM
+-- "Combined Operational Load- Bearing External Resistance Treadmill "
+#+END_SRC
+
+And that's really all there is too these scary typeclasses. Just like in Java where you have some Objects where it's not possible to directly change the inner state, in Haskell you have some datatypes that also don't allow directly changing their inner variable(s). Just like in Java where if we know what class the Object inherits from we can  use certain generic functions on them, in Haskell we have typeclasses, and if a datatype implements a certain typeclass, we can be sure there will be certain functions that will work on it. 
+
+[fn:1] Two functions, but only one new one. The other one (return) is simply an alias to our previously mentioned wrap (aka pure)
