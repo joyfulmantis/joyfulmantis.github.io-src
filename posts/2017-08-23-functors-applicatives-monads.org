@@ -1,8 +1,10 @@
 ---
 title: "Functors, Applicatives, and Monads: You don't need to know theory to use them"
 date: 2017-08-23
-hackernews_url:
+hackernews_url: https://news.ycombinator.com/item?id=15080989
 ---
+
+EDIT: Changed some wording to clarify that a typeclass should never be thought of as a container. See this post's [[https://github.com/joyfulmantis/joyfulmantis.github.io/commits/master/posts/2017-08-23-functors-applicatives-monads.html][commit history]]
 
 Figuring out how to use the common functional programming typeclassess is not as hard as you would think. The key here is not to start with understanding the category theory behind them, but rather first start with using their implementations in the standard datatypes. Eventually by using them throughout different datatypes you will be able to grasp the larger picture, without having to touch the slightest bit of category theory.
 
@@ -316,7 +318,7 @@ maybeJamesJohnBothSmellM = bindM (maybeBothSmellBadM2 maybeJamesM) maybeJohnM
 
 Notice that in this example the ordering is opposite from what we found from using Applicative's apply. With apply we have two Maybe values, one of which is a function, and compose them together going left to right. With Monad's bind, this is no longer the case, but rather we have a function that takes the unwrapped value from the second Maybe value and returns another Maybe value from it, therefore making the order right to left.
 
-With the move from the Functor typeclass to the Applicative typeclass we moved from being able to modify the value wrapped inside the Functor to the ability to compose different separately wrapped elements in a Applicative together, so when we make the jump from Applicative to Monad, what new ability do we get? From comparing the types between bind and apply we can see that for the first time we no longer have our functions resulting value prewrapped for us. This comes in useful if the function we want to apply to the unwrapped value, itself already produces a wrapped value. If we had that scenario with only an Applicative we would have no way to avoid nesting. In fact one cool benefit of Monad's bind is that if we are given an already nested structure (for example if apply was used when bind should have been used), we can flatten it by just using the bind and identity functions.
+With the move from the Functor typeclass to the Applicative typeclass we moved from being able to modify the value wrapped inside the datatype that implements the Functor typeclass to the ability to compose different separately wrapped elements in a datatype that implements the Applicative typeclasss together, so when we make the jump from Applicative to Monad, what new ability do we get? From comparing the types between bind and apply we can see that for the first time we no longer have our functions resulting value prewrapped for us. This comes in useful if the function we want to apply to the unwrapped value, itself already produces a wrapped value. If we had that scenario with only an Applicative we would have no way to avoid nesting. In fact one cool benefit of Monad's bind is that if we are given an already nested structure (for example if apply was used when bind should have been used), we can flatten it by just using the bind and identity functions.
 
 #+BEGIN_SRC haskell
 bindM = (=<<)
