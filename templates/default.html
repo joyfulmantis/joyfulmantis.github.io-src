@@ -9,7 +9,9 @@
     <link rel="stylesheet" type="text/css" href="/css/syntax.css" />
     <link href="http://fonts.googleapis.com/css?family=Quattrocento" rel="stylesheet" type="text/css" />
     <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet"/>
+    <link rel="alternate" type="application/atom+xml" title="Blog" href="/atom.xml" />
+
   </head>
   <body>
     <div id="header">
@@ -53,6 +55,14 @@
       $if(notitle)$
       $else$
       <h1>$title$</h1>
+      $if(date)$
+      <div class="info">
+        Posted on $date$
+        $if(author)$
+        by $author$
+        $endif$
+      </div>
+      $endif$
       $endif$
       $body$
     </div>
