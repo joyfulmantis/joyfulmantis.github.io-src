@@ -2,9 +2,9 @@
 title: "Functors, Applicatives, and Monads: You don't need to know theory to use them"
 date: 2017-08-23
 hackernews_url: https://news.ycombinator.com/item?id=15080989
+edit_reason: Changed some wording to clarify that a typeclass should never be thought of as a container.
+commit_history_url: https://github.com/joyfulmantis/joyfulmantis.github.io/commits/master/posts/2017-08-23-functors-applicatives-monads.html
 ---
-
-EDIT: Changed some wording to clarify that a typeclass should never be thought of as a container. See this post's [[https://github.com/joyfulmantis/joyfulmantis.github.io/commits/master/posts/2017-08-23-functors-applicatives-monads.html][commit history]]
 
 Figuring out how to use the common functional programming typeclassess is not as hard as you would think. The key here is not to start with understanding the category theory behind them, but rather first start with using their implementations in the standard datatypes. Eventually by using them throughout different datatypes you will be able to grasp the larger picture, without having to touch the slightest bit of category theory.
 

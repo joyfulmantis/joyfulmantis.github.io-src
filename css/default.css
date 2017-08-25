@@ -92,3 +92,7 @@ div.comments {
     margin-top: 30px;
     text-align: left;
 }
+div.edit_history {
+    font-style: italic;
+    margin-top: 20px;
+}

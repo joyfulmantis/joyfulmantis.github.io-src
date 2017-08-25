@@ -5,6 +5,12 @@
     $endif$
 </div>
 
+$if(edit_reason)$
+<div class="edit_history">
+  EDIT: $edit_reason$ $if(commit_history_url)$ See this post's <a href="$commit_history_url$">commit history</a> for more details.$endif$
+</div>
+$endif$
+
 $body$
 
 $if(hackernews_url)$
