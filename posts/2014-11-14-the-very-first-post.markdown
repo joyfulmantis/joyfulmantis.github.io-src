@@ -1,5 +1,5 @@
 ---
-title: the very first post
+title: The Very First Post
 ---
 
 This post is a very special post, the firstborn of many posts to come.

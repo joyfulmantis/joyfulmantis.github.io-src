@@ -1,5 +1,5 @@
 ---
-title: "Hacking HLS: My Summer of Haskell Journey"
+title: "Hacking HLS: My Summer of Haskell journey"
 date: 2023-08-01
 ---
 

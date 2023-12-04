@@ -15,6 +15,10 @@ main = hakyll $ do
         route   idRoute
         compile compressCssCompiler
 
+    match "uploads/*" $ do
+        route   idRoute
+        compile copyFileCompiler
+
     match (fromList ["about.markdown", "projects.markdown", "contact.markdown"]) $ do
         route   $ setExtension "html"
         compile $ pandocCompiler

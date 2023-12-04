@@ -4,4 +4,4 @@ contact: true
 notitle: true
 ---
 
-My username at gmail is the same as my one at github.
+You can contact me with email. My username at gmail is the same as my one at github.
